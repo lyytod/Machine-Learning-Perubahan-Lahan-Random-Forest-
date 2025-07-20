@@ -1,0 +1,16 @@
+paths:
+  ndvi_from: data/ndvi_from.tif
+  ndvi_to: data/ndvi_to.tif
+  rgb: data/rgb.tif
+  boundary: data/boundary.shp
+  change_map: output/change_map.tif
+
+outputs:
+  preprocessed: output/preprocessed
+  classified: output/classified
+  model: output/model
+  prediction: output/prediction/prediction.tif
+  evaluation: output/evaluation
+  analysis: output/analysis
+  visualization: output/visualization
+  interactive_map: output/peta_perubahan_interaktif.html

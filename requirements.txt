@@ -1,0 +1,11 @@
+numpy
+rasterio
+scikit-learn
+matplotlib
+seaborn
+pandas
+geopandas
+pyyaml
+shapely
+folium
+branca
