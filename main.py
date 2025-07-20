@@ -24,6 +24,7 @@ def main():
     preprocess(
         ndvi_from_path=config["paths"]["ndvi_from"],
         ndvi_to_path=config["paths"]["ndvi_to"],
+        rgb_path=config["paths"]["rgb"],
         boundary_path=config["paths"]["boundary"],
         output_dir=config["outputs"]["preprocessed"]
     )
