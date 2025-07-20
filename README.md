@@ -71,7 +71,7 @@ Untuk menjalankan proyek ini, ikuti langkah-langkah berikut:
 
 1.  **Clone repositori:**
     ```bash
-    git clone <URL_REPOSITORI_ANDA>
+    git clone https://github.com/lyytod/Machine-Learning-Perubahan-Lahan-Random-Forest-.git
     cd land_cover_template
     ```
 
