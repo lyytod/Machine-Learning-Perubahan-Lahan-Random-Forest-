@@ -4,7 +4,7 @@ Proyek ini bertujuan untuk mendeteksi dan menganalisis perubahan tutupan lahan m
 
 ## Fitur Utama
 
-*   **Preprocessing Citra:** Pemotongan (clipping) citra satelit (NDVI dan RGB) berdasarkan batas area studi.
+*   **Preprocessing Citra:** Pemotongan (clipping) citra satelit (NDVI dan RGB) berdasarkan batas area studi. **Termasuk deteksi otomatis dan reprojeksi sistem koordinat ke UTM yang sesuai jika data input belum dalam proyeksi UTM.**
 *   **Klasifikasi NDVI:** Mengklasifikasikan nilai NDVI menjadi kategori tutupan lahan (Non-Vegetasi, Vegetasi Sedang, Vegetasi Tinggi).
 *   **Deteksi Perubahan:** Mengidentifikasi dan menguantifikasi perubahan tutupan lahan antara dua periode waktu.
 *   **Pelatihan & Prediksi Model:** Melatih model klasifikasi (Random Forest) menggunakan citra RGB dan label NDVI, kemudian menggunakannya untuk memprediksi tutupan lahan.
@@ -53,7 +53,7 @@ Proyek ini bertujuan untuk mendeteksi dan menganalisis perubahan tutupan lahan m
 *   `data/`: Direktori untuk menyimpan data input mentah (citra NDVI, RGB, dan shapefile batas).
 *   `output/`: Direktori tempat semua hasil pemrosesan, model, prediksi, analisis, dan visualisasi akan disimpan.
 *   `src/`: Berisi modul-modul Python terpisah yang mengimplementasikan setiap langkah dalam alur kerja:
-    *   `preprocessing.py`: Fungsi untuk memproses awal citra.
+    *   `preprocessing.py`: Fungsi untuk memproses awal citra, termasuk **reprojeksi sistem koordinat otomatis ke UTM** dan pemotongan citra.
     *   `ndvi_to_class.py`: Klasifikasi nilai NDVI ke kelas tutupan lahan.
     *   `change_detection.py`: Deteksi perubahan antara dua peta klasifikasi.
     *   `model.py`: Ekstraksi fitur, pelatihan, dan penyimpanan model Machine Learning.
@@ -153,4 +153,5 @@ Proyek ini dibangun menggunakan pustaka Python berikut (terdaftar di `requiremen
 *   `matplotlib`
 *   `seaborn`
 *   `folium`
-*   `branca` 
+*   `branca`
+*   `pyproj` 
