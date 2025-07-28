@@ -5,6 +5,11 @@ paths:
   boundary: data/boundary.shp
   change_map: output/change_map.tif
 
+  # Paths for new area prediction (Mode 2)
+  rgb_from_new_area: data/rgb_from_new_area.tif # Ganti dengan path RGB periode awal untuk area baru
+  rgb_to_new_area: data/rgb_to_new_area.tif   # Ganti dengan path RGB periode akhir untuk area baru
+  boundary_new_area: data/boundary_new_area.shp # Ganti dengan path shapefile batas untuk area baru
+
 outputs:
   preprocessed: output/preprocessed
   classified: output/classified
@@ -14,3 +19,10 @@ outputs:
   analysis: output/analysis
   visualization: output/visualization
   interactive_map: output/peta_perubahan_interaktif.html
+
+  # Outputs for new area prediction (Mode 2)
+  prediction_new_area_from: output/prediction/new_area_prediction_from.tif
+  prediction_new_area_to: output/prediction/new_area_prediction_to.tif
+  change_map_new_area: output/change_map_new_area.tif
+  analysis_new_area: output/analysis/new_area_analysis
+  visualization_new_area: output/visualization/new_area_visualization

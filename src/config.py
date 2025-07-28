@@ -10,4 +10,4 @@ CLASS_MAPPING = {
     "Vegetasi Tinggi": 2
 }
 
-PIXEL_AREA_M2 = 100 # Assuming 10x10 meter resolution per pixel 
+# PIXEL_AREA_M2 = 100 # Assuming 10x10 meter resolution per pixel # Removed as calculated dynamically 

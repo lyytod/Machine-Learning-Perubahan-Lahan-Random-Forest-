@@ -5,16 +5,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import rasterio
 from collections import Counter
-from config import CLASS_NAMES, CLASS_MAPPING, PIXEL_AREA_M2
-from ndvi_to_class import ndvi_to_class
+from src.config import CLASS_NAMES, CLASS_MAPPING
+from src.ndvi_to_class import ndvi_to_class
 
-
-def compute_area_stats(label_array):
+def compute_area_stats(label_array, pixel_area):
     counts = Counter(label_array[label_array != 255].flatten())
     stats = []
     for class_id, count in counts.items():
         class_name = CLASS_NAMES.get(class_id, f"Kelas {class_id}")
-        luas_m2 = count * PIXEL_AREA_M2
+        luas_m2 = count * pixel_area
         luas_ha = luas_m2 / 10000
         stats.append({"Kelas": class_name, "Piksel": count, "Luas (m2)": luas_m2, "Luas (ha)": luas_ha})
     return stats, counts
@@ -104,8 +103,12 @@ if __name__ == "__main__":
     label_from = ndvi_to_class(ndvi_from)
     label_to = ndvi_to_class(ndvi_to)
 
-    stats_from, counts_from = compute_area_stats(label_from)
-    stats_to, counts_to = compute_area_stats(label_to)
+    # Dapatkan pixel_area dari raster asli untuk perhitungan statistik
+    with rasterio.open(ndvi_from_path) as src_meta:
+        pixel_area = abs(src_meta.transform[0] * src_meta.transform[4]) # Hitung area piksel
+
+    stats_from, counts_from = compute_area_stats(label_from, pixel_area)
+    stats_to, counts_to = compute_area_stats(label_to, pixel_area)
 
     save_stats_to_csv(stats_from, os.path.join(output_dir, "statistik_klasifikasi_from.csv"))
     save_stats_to_csv(stats_to, os.path.join(output_dir, "statistik_klasifikasi_to.csv"))

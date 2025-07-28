@@ -7,6 +7,7 @@ from shapely.geometry import mapping
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from pyproj import CRS, Transformer
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +29,18 @@ def reproject_to_utm(input_path, output_dir, file_type):
 
     if file_type == "raster":
         with rasterio.open(input_path) as src:
-            if src.crs.is_projected and src.crs.name.startswith("UTM"):
+            if src.crs and src.crs.is_projected and src.crs.name.startswith("UTM"):
                 logger.info(f"[*] Raster '{input_path}' already in UTM: {src.crs.name}. Skipping reprojection.")
                 return input_path
             
-            logger.info(f"[*] Reprojecting raster '{input_path}' from {src.crs.name} to UTM...")
+            logger.info(f"[*] Reprojecting raster '{input_path}' from {src.crs.to_string() if src.crs else 'unknown CRS'} to UTM...")
             
             bounds = src.bounds
             center_lon = (bounds.left + bounds.right) / 2
             center_lat = (bounds.bottom + bounds.top) / 2
             
-            if src.crs.to_epsg() != 4326: # If not already WGS84
+            # Transform center coordinates to WGS84 if source CRS is not WGS84
+            if src.crs and src.crs.to_epsg() != 4326:
                 transformer = Transformer.from_crs(src.crs, "EPSG:4326", always_xy=True)
                 center_lon, center_lat = transformer.transform(center_lon, center_lat)
 
@@ -54,34 +56,42 @@ def reproject_to_utm(input_path, output_dir, file_type):
                 'crs': target_crs,
                 'transform': transform,
                 'width': width,
-                'height': height
+                'height': height,
+                'count': src.count # Pastikan untuk mempertahankan jumlah band
             })
 
+            # Reproject all bands at once
+            destination_data = np.zeros((src.count, height, width), dtype=src.dtype)
+
+            reproject(
+                source=src.read(),  # Baca semua band sebagai array 3D
+                destination=destination_data,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs=target_crs,
+                resampling=Resampling.nearest
+            )
+
             with rasterio.open(output_path, 'w', **kwargs) as dst:
-                reproject(
-                    source=rasterio.band(src, 1),
-                    destination=rasterio.band(dst, 1),
-                    src_transform=src.transform,
-                    src_crs=src.crs,
-                    dst_transform=transform,
-                    dst_crs=target_crs,
-                    resampling=Resampling.nearest
-                )
+                dst.write(destination_data)
+
         logger.info(f"[✔] Raster reprojected and saved: {output_path}")
         return output_path
 
     elif file_type == "vector":
         gdf = gpd.read_file(input_path)
-        if gdf.crs.is_projected and gdf.crs.name.startswith("UTM"):
+        if gdf.crs and gdf.crs.is_projected and gdf.crs.name.startswith("UTM"):
             logger.info(f"[*] Vector '{input_path}' already in UTM: {gdf.crs.name}. Skipping reprojection.")
             return input_path
 
-        logger.info(f"[*] Reprojecting vector '{input_path}' from {gdf.crs.name} to UTM...")
+        logger.info(f"[*] Reprojecting vector '{input_path}' from {gdf.crs.to_string() if gdf.crs else 'unknown CRS'} to UTM...")
         
         centroid = gdf.geometry.unary_union.centroid
         center_lon, center_lat = centroid.x, centroid.y
         
-        if gdf.crs.to_epsg() != 4326:
+        # Transform center coordinates to WGS84 if source CRS is not WGS84
+        if gdf.crs and gdf.crs.to_epsg() != 4326:
             transformer = Transformer.from_crs(gdf.crs, "EPSG:4326", always_xy=True)
             center_lon, center_lat = transformer.transform(center_lon, center_lat)
 
@@ -118,35 +128,42 @@ def crop_raster_to_shapefile(raster_path, shapefile_path, output_path):
 
 def preprocess(ndvi_from_path, ndvi_to_path, rgb_path, boundary_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    reprojected_data_dir = os.path.join(output_dir, "reprojected_temp")
-    os.makedirs(reprojected_data_dir, exist_ok=True)
+    reprojected_data_temp_dir = os.path.join(output_dir, "reprojected_temp")
+    os.makedirs(reprojected_data_temp_dir, exist_ok=True)
 
-    reprojected_ndvi_from_path = reproject_to_utm(ndvi_from_path, reprojected_data_dir, "raster")
-    reprojected_ndvi_to_path = reproject_to_utm(ndvi_to_path, reprojected_data_dir, "raster")
-    reprojected_rgb_path = reproject_to_utm(rgb_path, reprojected_data_dir, "raster")
-    reprojected_boundary_path = reproject_to_utm(boundary_path, reprojected_data_dir, "vector")
+    reprojected_ndvi_from_path = reproject_to_utm(ndvi_from_path, reprojected_data_temp_dir, "raster")
+    reprojected_ndvi_to_path = reproject_to_utm(ndvi_to_path, reprojected_data_temp_dir, "raster")
+    reprojected_rgb_path = reproject_to_utm(rgb_path, reprojected_data_temp_dir, "raster")
+    reprojected_boundary_path = reproject_to_utm(boundary_path, reprojected_data_temp_dir, "vector")
+
+    ndvi_from_clipped_path = os.path.join(output_dir, "ndvi_from_clipped.tif")
+    ndvi_to_clipped_path = os.path.join(output_dir, "ndvi_to_clipped.tif")
+    rgb_clipped_path = os.path.join(output_dir, "rgb_clipped.tif")
 
     crop_raster_to_shapefile(
         raster_path=reprojected_ndvi_from_path,
         shapefile_path=reprojected_boundary_path,
-        output_path=os.path.join(output_dir, "ndvi_from_clipped.tif")
+        output_path=ndvi_from_clipped_path
     )
 
     crop_raster_to_shapefile(
         raster_path=reprojected_ndvi_to_path,
         shapefile_path=reprojected_boundary_path,
-        output_path=os.path.join(output_dir, "ndvi_to_clipped.tif")
+        output_path=ndvi_to_clipped_path
     )
 
     crop_raster_to_shapefile(
         raster_path=reprojected_rgb_path,
         shapefile_path=reprojected_boundary_path,
-        output_path=os.path.join(output_dir, "rgb_clipped.tif")
+        output_path=rgb_clipped_path
     )
 
-    # for f in os.listdir(reprojected_data_dir):
-    #     os.remove(os.path.join(reprojected_data_dir, f))
-    # os.rmdir(reprojected_data_dir)
+    # Clean up temporary reprojected files (optional, can be uncommented later if needed)
+    # for f in os.listdir(reprojected_data_temp_dir):
+    #     os.remove(os.path.join(reprojected_data_temp_dir, f))
+    # os.rmdir(reprojected_data_temp_dir)
+
+    return ndvi_from_clipped_path, ndvi_to_clipped_path, rgb_clipped_path, reprojected_boundary_path
 
 if __name__ == "__main__":
     print("This script is primarily intended to be called by main.py.")
