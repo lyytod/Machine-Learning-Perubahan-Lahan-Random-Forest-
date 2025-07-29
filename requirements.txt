@@ -8,5 +8,7 @@ joblib
 pandas
 matplotlib
 seaborn
+folium
+branca
 pyproj
 fiona

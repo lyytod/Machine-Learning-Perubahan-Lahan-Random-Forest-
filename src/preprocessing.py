@@ -57,11 +57,12 @@ def reproject_to_utm(input_path, output_dir, file_type):
                 'transform': transform,
                 'width': width,
                 'height': height,
-                'count': src.count # Pastikan untuk mempertahankan jumlah band
+                'count': src.count,
+                'nodata': src.nodata # Pertahankan nilai nodata dari sumber
             })
 
             # Reproject all bands at once
-            destination_data = np.zeros((src.count, height, width), dtype=src.dtype)
+            destination_data = np.zeros((src.count, height, width), dtype=src.meta['dtype'])
 
             reproject(
                 source=src.read(),  # Baca semua band sebagai array 3D
@@ -111,18 +112,33 @@ def crop_raster_to_shapefile(raster_path, shapefile_path, output_path):
     geometries = [mapping(geom) for geom in gdf.geometry]
 
     with rasterio.open(raster_path) as src:
-        out_image, out_transform = mask(src, geometries, crop=True)
+        # Gunakan src.nodata jika ada, jika tidak, gunakan nilai default yang sesuai
+        # Untuk citra RGB (biasanya uint8), 0 atau 255 sering digunakan sebagai nodata.
+        # Untuk NDVI (biasanya float), NaN atau nilai di luar rentang -1 hingga 1.
+        # Kita akan gunakan src.nodata jika ada, atau 0 sebagai default. Jika tipe data adalah float, kita bisa menggunakan np.nan.
+        # Untuk lebih aman, kita bisa menggunakan nilai yang tidak mungkin muncul di data valid.
+        nodata_value = src.nodata if src.nodata is not None else 0 # Default ke 0 jika src.nodata tidak ada
+        if np.issubdtype(src.meta['dtype'], np.floating):
+            nodata_value = np.nan # Gunakan NaN untuk tipe data float
+
+        out_image, out_transform = mask(src, geometries, crop=True, filled=True, nodata=nodata_value)
         out_meta = src.meta.copy()
 
     out_meta.update({
         "height": out_image.shape[1],
         "width": out_image.shape[2],
         "transform": out_transform,
-        "crs": src.crs
+        "crs": src.crs,
+        "nodata": nodata_value # Pastikan nodata value juga diperbarui di metadata
     })
 
     with rasterio.open(output_path, "w", **out_meta) as dest:
-        dest.write(out_image)
+        # Pastikan out_image memiliki dimensi yang benar untuk dest.write
+        # Jika out_image.ndim == 2 (untuk band tunggal), perlu diubah menjadi (1, H, W)
+        if out_image.ndim == 2:
+            dest.write(out_image[np.newaxis, :, :])
+        else:
+            dest.write(out_image)
 
     logger.info(f"[✔] Cropped saved: {output_path}")
 

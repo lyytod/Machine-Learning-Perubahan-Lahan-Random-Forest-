@@ -40,6 +40,7 @@ def predict_land_cover(rgb_path, model_path, output_path):
     meta.update({
         "count": 1,
         "dtype": "uint8",
+        "nodata": 255 # Eksplisitkan nodata untuk viewer
         # Keep original transform, height, width, crs from the clipped RGB.
         # These are already correct from src.meta.
     })

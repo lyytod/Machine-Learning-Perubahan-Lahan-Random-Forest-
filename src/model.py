@@ -78,7 +78,7 @@ def train_and_predict(rgb_path, label_path, boundary_path, model_output, predict
     predict_land_cover(
         rgb_path=rgb_path,
         model_path=f"{model_output}/random_forest.pkl",
-        output_path=prediction_output + "/prediction.tif"
+        output_path=prediction_output # Gunakan jalur file lengkap yang diterima
     )
 
 if __name__ == "__main__":

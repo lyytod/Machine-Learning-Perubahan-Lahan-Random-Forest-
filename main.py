@@ -64,7 +64,6 @@ def create_output_directories(config, logger, mode_2_specific=False):
 
 def run_full_pipeline(config, logger):
     create_output_directories(config, logger, mode_2_specific=False) # Create all general directories
-
     logger.info("[*] Memulai tahap Pra-pemrosesan...")
     ndvi_from_clipped, ndvi_to_clipped, rgb_clipped, boundary_reprojected = preprocess(
         ndvi_from_path=config["paths"]["ndvi_from"],
@@ -130,7 +129,7 @@ def run_full_pipeline(config, logger):
     transition_matrix = compute_transition_matrix(label_from, label_to)
     transition_matrix.to_csv(os.path.join(config["outputs"]["analysis"], "matrix_perubahan.csv"))
 
-    plot_bar_comparison(counts_from, counts_to, config["outputs"]["visualization"])
+    plot_bar_comparison(stats_from, stats_to, config["outputs"]["visualization"])
     plot_pie_chart(stats_from, tahun="awal", output_dir=config["outputs"]["visualization"])
     plot_pie_chart(stats_to, tahun="akhir", output_dir=config["outputs"]["visualization"])
     plot_transition_heatmap(os.path.join(config["outputs"]["analysis"], "matrix_perubahan.csv"), config["outputs"]["visualization"])
@@ -139,7 +138,7 @@ def run_full_pipeline(config, logger):
     logger.info("[*] Memulai tahap Pembuatan Peta Statis...")
     generate_static_map(
         change_map_path=config["paths"]["change_map"],
-        output_png_path=os.path.join(config["outputs"]["visualization"], "peta_perubahan_statis.png"),
+        output_png_path=os.path.join(config["outputs"]["analysis"], "peta_perubahan_statis.png"),
         output_tif_path=os.path.join(config["outputs"]["analysis"], "peta_perubahan_statis.tif")
     )
     logger.info("[✔] Tahap Pembuatan Peta Statis selesai.")
@@ -161,23 +160,6 @@ def run_prediction_with_existing_model(config, logger):
 
     logger.info("[*] Memulai Pra-pemrosesan citra RGB untuk area baru...")
     # Preprocess new RGB images and boundary
-    # We need to temporarily use the existing preprocess function structure.
-    # It expects ndvi_from, ndvi_to, rgb, boundary.
-    # For now, we'll pass the new RGBs as ndvi_from_path and rgb_path, and
-    # use a dummy for ndvi_to_path. This is a workaround; ideally, preprocess
-    # would be refactored for more flexibility.
-
-    # To avoid modifying preprocess.py, let's call it twice, once for rgb_from_new_area
-    # and once for rgb_to_new_area, assuming preprocess can handle a single RGB and boundary.
-    # However, preprocess currently always outputs 3 clipped rasters.
-    # Let's adjust `preprocess` call to only pass the necessary RGB and boundary,
-    # and adapt it to the output structure of `preprocess`.
-
-    # A more robust solution would be to create a new `preprocess_rgb_and_boundary`
-    # function in preprocessing.py. For this exercise, let's assume `preprocess`
-    # can be called to get clipped RGBs for new areas.
-
-    # Temporary directories for preprocessed outputs in mode 2
     temp_preprocessed_dir = os.path.join(config["outputs"]["preprocessed"], "temp_new_area")
     os.makedirs(temp_preprocessed_dir, exist_ok=True)
 
@@ -245,7 +227,7 @@ def run_prediction_with_existing_model(config, logger):
     transition_matrix.to_csv(os.path.join(config["outputs"]["analysis_new_area"], "matrix_perubahan_new_area.csv"))
 
     # Plot visualizations
-    plot_bar_comparison(counts_from, counts_to, config["outputs"]["visualization_new_area"])
+    plot_bar_comparison(stats_from, stats_to, config["outputs"]["visualization_new_area"])
     plot_pie_chart(stats_from, tahun="awal_new_area", output_dir=config["outputs"]["visualization_new_area"])
     plot_pie_chart(stats_to, tahun="akhir_new_area", output_dir=config["outputs"]["visualization_new_area"])
     plot_transition_heatmap(os.path.join(config["outputs"]["analysis_new_area"], "matrix_perubahan_new_area.csv"), config["outputs"]["visualization_new_area"])
@@ -254,7 +236,7 @@ def run_prediction_with_existing_model(config, logger):
     logger.info("[*] Memulai Pembuatan Peta Statis untuk Area Baru...")
     generate_static_map(
         change_map_path=config["outputs"]["change_map_new_area"],
-        output_png_path=os.path.join(config["outputs"]["visualization_new_area"], "peta_perubahan_statis_new_area.png"),
+        output_png_path=os.path.join(config["outputs"]["analysis_new_area"], "peta_perubahan_statis_new_area.png"),
         output_tif_path=os.path.join(config["outputs"]["analysis_new_area"], "peta_perubahan_statis_new_area.tif")
     )
     logger.info("[✔] Pembuatan Peta Statis Area Baru selesai.")

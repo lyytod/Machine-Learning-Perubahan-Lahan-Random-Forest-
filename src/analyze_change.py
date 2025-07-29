@@ -38,10 +38,10 @@ def save_stats_to_csv(stats, filename):
     df.to_csv(filename, index=False)
 
 
-def plot_bar_comparison(counts_from, counts_to, output_dir):
-    labels = list(CLASS_NAMES.values())
-    luas_from = [v / 10000 for v in counts_from.values()]  # m2 ke ha
-    luas_to = [v / 10000 for v in counts_to.values()]
+def plot_bar_comparison(stats_from, stats_to, output_dir):
+    labels = [s["Kelas"] for s in stats_from] # Asumsi kelas sama
+    luas_from = [s["Luas (ha)"] for s in stats_from]
+    luas_to = [s["Luas (ha)"] for s in stats_to]
 
     x = range(len(labels))
     width = 0.35
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     transition_matrix = compute_transition_matrix(label_from, label_to)
     transition_matrix.to_csv(os.path.join(output_dir, "matrix_perubahan.csv"))
 
-    plot_bar_comparison(counts_from, counts_to, output_dir)
+    plot_bar_comparison(stats_from, stats_to, output_dir)
     plot_pie_chart(stats_from, tahun="awal", output_dir=output_dir)
     plot_pie_chart(stats_to, tahun="akhir", output_dir=output_dir)
     plot_transition_heatmap(os.path.join(output_dir, "matrix_perubahan.csv"), output_dir)

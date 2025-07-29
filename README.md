@@ -77,7 +77,7 @@ Proyek ini bertujuan untuk mendeteksi dan menganalisis perubahan tutupan lahan m
 
 ## Instalasi
 
-Untuk menjalankan proyek ini, ikuti langkah-langkah berikut:
+Untuk menjalankan proyek ini, Anda harus memiliki Python 3.x terinstal di perangkat Anda. Setelah itu, ikuti langkah-langkah berikut:
 
 1.  **Clone repositori:**
     ```bash
@@ -161,9 +161,10 @@ Setelah eksekusi berhasil, folder `output/` akan berisi:
 *   `output/prediction/`: Peta prediksi tutupan lahan (`prediction.tif`). Untuk Mode 2, akan ada `new_area_prediction_from.tif` dan `new_area_prediction_to.tif`.
 *   `output/evaluation/`: Laporan evaluasi model.
 *   `output/analysis/`: File CSV berisi statistik luas perubahan (`luas_perubahan.csv`) dan matriks transisi (`matrix_perubahan.csv`), serta statistik klasifikasi (`statistik_klasifikasi_from.csv`, `statistik_klasifikasi_to.csv`). Untuk Mode 2, output akan berada di `output/analysis/new_area_analysis/`.
+    **Catatan Penting untuk File CSV Analisis:** Saat membuka file CSV di perangkat lunak seperti Microsoft Excel, pastikan pengaturan pemisah desimal Anda dikonfigurasi untuk menggunakan **titik (.)** dan bukan koma (,). Jika tidak, angka desimal pada kolom 'Luas (m2)' dan 'Luas (ha)' mungkin akan salah diinterpretasikan atau hilang.
 *   `output/visualization/`: Grafik perbandingan dan pie chart tutupan lahan (`grafik_perbandingan_luas.png`, `pie_tutupan_lahan_awal.png`, `pie_tutupan_lahan_akhir.png`), heatmap perubahan kelas (`heatmap_perubahan_kelas.png`), dan peta perubahan statis (`peta_perubahan_statis.png`). Untuk Mode 2, output akan berada di `output/visualization/new_area_visualization/`.
-*   ~~`output/peta_perubahan_interaktif.html`~~: Peta interaktif telah diganti dengan peta statis.
 *   `output/change_map_new_area.tif`: Peta perubahan untuk area baru (Mode 2).
+*   `output/log.txt`: File ini akan berisi log proses dari proyek ini, sehingga jika terjadi sebuah kesalahan akan mudah untuk menemukan pada tahapan mana kesalahan tersebut terjadi.
 
 ## Dependensi
 
