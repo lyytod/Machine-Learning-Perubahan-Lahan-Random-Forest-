@@ -100,7 +100,7 @@ def run_full_pipeline(config, logger):
         label_path=os.path.join(config["outputs"]["classified"], "ndvi_class_to.tif"),
         boundary_path=boundary_reprojected,
         model_output=config["outputs"]["model"],
-        prediction_output=os.path.dirname(config["outputs"]["prediction"]) # Pass directory for prediction output
+        prediction_output=config["outputs"]["prediction"]
     )
     logger.info("[✔] Tahap Pelatihan dan Prediksi Model selesai.")
 
