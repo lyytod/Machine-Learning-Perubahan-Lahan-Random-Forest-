@@ -180,5 +180,7 @@ Proyek ini dibangun menggunakan pustaka Python berikut (terdaftar di `requiremen
 *   `pandas`
 *   `matplotlib`
 *   `seaborn`
+*   `folium`
+*   `branca`
 *   `pyproj`
 *   `fiona` 
