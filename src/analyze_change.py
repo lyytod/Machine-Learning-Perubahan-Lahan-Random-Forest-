@@ -5,14 +5,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import rasterio
 from collections import Counter
-from src.config import CLASS_NAMES, CLASS_MAPPING
+from src.config import CLASS_NAMES, CLASS_MAPPING, CLASS_COLORS
 from src.ndvi_to_class import ndvi_to_class
 
 def compute_area_stats(label_array, pixel_area):
     counts = Counter(label_array[label_array != 255].flatten())
     stats = []
-    for class_id, count in counts.items():
+    # Pastikan urutan kelas konsisten dengan CLASS_NAMES/CLASS_COLORS
+    # Kita akan mengurutkan hasil berdasarkan ID kelas untuk konsistensi
+    sorted_class_ids = sorted(CLASS_NAMES.keys())
+    
+    for class_id in sorted_class_ids:
         class_name = CLASS_NAMES.get(class_id, f"Kelas {class_id}")
+        count = counts.get(class_id, 0) # Ambil count, jika tidak ada, default ke 0
         luas_m2 = count * pixel_area
         luas_ha = luas_m2 / 10000
         stats.append({"Kelas": class_name, "Piksel": count, "Luas (m2)": luas_m2, "Luas (ha)": luas_ha})
@@ -43,12 +48,15 @@ def plot_bar_comparison(stats_from, stats_to, output_dir):
     luas_from = [s["Luas (ha)"] for s in stats_from]
     luas_to = [s["Luas (ha)"] for s in stats_to]
 
+    # Dapatkan warna yang konsisten
+    colors = [CLASS_COLORS[label] for label in labels]
+
     x = range(len(labels))
     width = 0.35
 
     plt.figure(figsize=(10, 6))
-    plt.bar([i - width/2 for i in x], luas_from, width, label="Tahun Awal")
-    plt.bar([i + width/2 for i in x], luas_to, width, label="Tahun Akhir")
+    plt.bar([i - width/2 for i in x], luas_from, width, label="Tahun Awal", color=[c for c in colors]) # Aplikasikan warna
+    plt.bar([i + width/2 for i in x], luas_to, width, label="Tahun Akhir", color=[c for c in colors])   # Aplikasikan warna
 
     plt.xticks(x, labels)
     plt.ylabel("Luas Tutupan Lahan (ha)")
@@ -63,11 +71,26 @@ def plot_bar_comparison(stats_from, stats_to, output_dir):
 
 
 def plot_pie_chart(stats, tahun, output_dir):
-    labels = [s["Kelas"] for s in stats]
-    luas_ha = [s["Luas (ha)"] for s in stats]
+    # Urutan kelas yang diinginkan untuk plotting (sesuai dengan gambar contoh)
+    desired_plot_order = ["Vegetasi Tinggi", "Non-Vegetasi", "Vegetasi Sedang"]
 
-    plt.figure(figsize=(6, 6))
-    plt.pie(luas_ha, labels=labels, autopct='%1.1f%%', startangle=90)
+    # Buat kamus untuk akses cepat berdasarkan nama kelas
+    stats_dict = {s["Kelas"]: s["Luas (ha)"] for s in stats}
+
+    # Susun ulang labels, luas_ha, dan colors sesuai urutan yang diinginkan
+    ordered_labels = []
+    ordered_luas_ha = []
+    ordered_colors = []
+
+    for class_name in desired_plot_order:
+        if class_name in stats_dict:
+            ordered_labels.append(class_name)
+            ordered_luas_ha.append(stats_dict[class_name])
+            ordered_colors.append(CLASS_COLORS[class_name])
+        # Optional: handle classes that might not be present in stats_dict if necessary
+
+    plt.figure(figsize=(8, 8)) # Ukuran figur yang sedikit lebih besar untuk visualisasi yang lebih baik
+    plt.pie(ordered_luas_ha, labels=ordered_labels, autopct='%1.1f%%', startangle=90, colors=ordered_colors, counterclock=False)
     plt.title(f"Proporsi Tutupan Lahan Tahun {tahun}")
     plt.axis('equal')
     plt.tight_layout()

@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-def setup_logger(log_path="outputs/log.txt"):
+def setup_logger(log_path="output/log.txt"):
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
